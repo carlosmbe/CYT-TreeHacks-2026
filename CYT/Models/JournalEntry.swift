@@ -34,6 +34,7 @@ enum MoodLevel: String, CaseIterable, Codable, Sendable {
 enum EntryAttachmentType: String, Codable, Sendable {
     case image
     case audio
+    case video
     case healthData
 }
 

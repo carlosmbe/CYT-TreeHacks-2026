@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(JournalStore.self) private var store
+    var vibeCheckMood: MoodLevel?
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -13,6 +14,11 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     greetingHeader
+
+                    if let mood = vibeCheckMood {
+                        vibeCheckCard(mood: mood)
+                    }
+
                     insightCard
                     metricsGrid
                     recentEntriesSection
@@ -44,6 +50,47 @@ struct HomeView: View {
         case 12..<17: return "Good Afternoon"
         default: return "Good Evening"
         }
+    }
+
+    // MARK: - Vibe Check Card
+
+    private func vibeCheckCard(mood: MoodLevel) -> some View {
+        HStack(spacing: 14) {
+            Text(mood.emoji)
+                .font(.system(size: 44))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Today's Vibe")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                Text("You're feeling \(mood.rawValue.lowercased())")
+                    .font(.headline)
+                Text("Detected by on-device vision AI")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer()
+
+            Circle()
+                .fill(Color(mood.color).opacity(0.2))
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Image(systemName: "brain.head.profile")
+                        .font(.caption)
+                        .foregroundStyle(Color(mood.color))
+                )
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(mood.color).opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(mood.color).opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Insight Card
@@ -177,6 +224,6 @@ struct EntryCard: View {
 }
 
 #Preview {
-    HomeView()
+    HomeView(vibeCheckMood: .happy)
         .environment(JournalStore())
 }
