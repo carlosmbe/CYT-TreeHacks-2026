@@ -10,6 +10,7 @@ internal import Combine
 import FoundationModels
 #endif
 
+@available(iOS 26.0, *)
 @MainActor
 final class LLMService: ObservableObject {
     enum State: Equatable {
@@ -29,7 +30,6 @@ final class LLMService: ObservableObject {
 
     private var generationTask: Task<String, Never>?
 #if canImport(FoundationModels)
-    @available(iOS 26.0, *)
     private var session: LanguageModelSession?
 #endif
 
@@ -40,11 +40,6 @@ final class LLMService: ObservableObject {
 
         state = .loading
 #if canImport(FoundationModels)
-        guard #available(iOS 26.0, *) else {
-            state = .failed("Requires iOS 26+ and Apple Intelligence support.")
-            return
-        }
-
         let model = SystemLanguageModel.default
         switch model.availability {
         case .available:
@@ -82,7 +77,7 @@ final class LLMService: ObservableObject {
 
 #if canImport(FoundationModels)
         generationTask = Task<String, Never> {
-            guard #available(iOS 26.0, *), let session else {
+            guard let session else {
                 return "Foundation model session is unavailable."
             }
 
@@ -120,9 +115,6 @@ final class LLMService: ObservableObject {
 
     private var hasLoadedSession: Bool {
 #if canImport(FoundationModels)
-        guard #available(iOS 26.0, *) else {
-            return false
-        }
         return session != nil
 #else
         return false

@@ -447,20 +447,6 @@ struct ContentView: View {
         }
     }
 
-    private var statusText: String {
-        switch llmService.state {
-        case .idle:
-            return "Idle"
-        case .loading:
-            return "Loading model..."
-        case .ready:
-            return "Ready"
-        case .generating:
-            return "Generating..."
-        case .failed(let message):
-            return "Failed: \(message)"
-        }
-    }
 }
 
 #Preview {
