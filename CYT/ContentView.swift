@@ -18,6 +18,7 @@ let FRAME_DELAY = Duration.milliseconds(1)
 struct ContentView: View {
     @State private var camera = CameraController()
     @State private var model = FastVLMModel()
+    @State private var healthProvider = HealthDataProvider()
 
     /// stream of frames -> VideoFrameView, see distributeVideoFrames
     @State private var framesToDisplay: AsyncStream<CVImageBuffer>?
@@ -360,9 +361,12 @@ struct ContentView: View {
     }
 
     func analyzeVideoFrames(_ frames: AsyncStream<CVImageBuffer>) async {
+        let healthContext = await healthProvider.generateLLMContext()
+        let basePrompt = "\(healthContext)\n\n\(prompt) \(promptSuffix)"
+
         for await frame in frames {
             let userInput = UserInput(
-                prompt: .text("\(prompt) \(promptSuffix)"),
+                prompt: .text(basePrompt),
                 images: [.ciImage(CIImage(cvPixelBuffer: frame))]
             )
             
@@ -435,14 +439,14 @@ struct ContentView: View {
             model.output = ""
         }
 
-        // Construct request to model
-        let userInput = UserInput(
-            prompt: .text("\(prompt) \(promptSuffix)"),
-            images: [.ciImage(CIImage(cvPixelBuffer: frame))]
-        )
-
-        // Post request to FastVLM
+        // Post request to FastVLM with health context in prompt
         Task {
+            let healthContext = await healthProvider.generateLLMContext()
+            let fullPrompt = "\(healthContext)\n\n\(prompt) \(promptSuffix)"
+            let userInput = UserInput(
+                prompt: .text(fullPrompt),
+                images: [.ciImage(CIImage(cvPixelBuffer: frame))]
+            )
             await model.generate(userInput)
         }
     }
