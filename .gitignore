@@ -1,0 +1,3 @@
+# Large ML model files
+FastVLMModel/FastVLM/model/model.safetensors
+FastVLMModel/FastVLM/model/fastvithd.mlpackage/Data/com.apple.CoreML/weights/weight.bin
