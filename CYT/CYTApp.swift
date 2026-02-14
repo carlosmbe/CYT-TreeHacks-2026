@@ -11,7 +11,8 @@ import SwiftUI
 struct CYTApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+           // ContentView()
+            TestSpeechEmotionsContentView()
         }
     }
 }
