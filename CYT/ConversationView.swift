@@ -896,8 +896,9 @@ final class ConversationViewModel {
         let userContent = emotion.map { "\(transcript) (voice tone: \($0))" } ?? transcript
         messages.append(ChatMessage(role: "user", content: userContent, timestamp: Date(), emotion: emotion))
 
-        let prompt = buildPrompt(emotion: emotion)
-        let response = await llmService.generate(prompt: prompt)
+            // Send to LLM — the KV cache preserves the full conversation history,
+            // so we only send the new user message (no need to rebuild old turns).
+            let response = await llmService.chat(userMessage: userContent)
 
         messages.append(ChatMessage(role: "assistant", content: response, timestamp: Date()))
 
@@ -1082,29 +1083,7 @@ final class ConversationViewModel {
         }
     }
 
-    // MARK: - Prompt Building
-
-    private func buildPrompt(emotion: String? = nil) -> String {
-        let maxMessages = 6
-        let recent = messages.suffix(maxMessages)
-        var lines: [String] = []
-
-        // Include health context on first exchange
-        if messages.count <= 2 {
-            let healthContext = HealthDataProvider.formatForLLM(healthSnapshot)
-            if !healthContext.isEmpty {
-                lines.append("Context: \(healthContext)")
-            }
-        }
-
-        for msg in recent {
-            let prefix = msg.role == "user" ? "User" : "Assistant"
-            lines.append("\(prefix): \(msg.content)")
-        }
-        lines.append("Assistant:")
-        return lines.joined(separator: "\n")
-    }
-
+    
     // MARK: - Live Activity
 
     func startLiveActivity() {
@@ -1191,7 +1170,12 @@ final class ConversationViewModel {
         stopAmplitudeThrottle()
         endLiveActivity()
         pipService.stopPiP()
+        
+      
+        Task { await llmService.resetConversation() }
+        
         resetConversation()
+              
     }
 
     // MARK: - Amplitude Throttle for Live Activity
