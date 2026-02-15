@@ -14,7 +14,6 @@ struct ChatMessage: Identifiable {
     let timestamp: Date
 }
 
-@available(iOS 26.0, *)
 struct ConversationView: View {
     @State private var viewModel = ConversationViewModel()
     @AppStorage("ttsEnabled") private var ttsEnabled = true
@@ -120,7 +119,6 @@ private struct MessageBubble: View {
     }
 }
 
-@available(iOS 26.0, *)
 @Observable
 final class ConversationViewModel {
     var messages: [ChatMessage] = []
@@ -174,6 +172,9 @@ final class ConversationViewModel {
         textToSpeechService.stop()
         messages = []
         isGenerating = false
+
+        // Reset the LLM conversation context so the next conversation starts fresh.
+        Task { await llmService.resetConversation() }
     }
 
     private func handleAutoStop() async {
@@ -202,8 +203,9 @@ final class ConversationViewModel {
             let userContent = emotion.map { "\(transcript) (voice tone: \($0))" } ?? transcript
             messages.append(ChatMessage(role: "user", content: userContent, timestamp: Date()))
 
-            let prompt = buildPrompt(emotion: emotion)
-            let response = await llmService.generate(prompt: prompt)
+            // Send to LLM — the KV cache preserves the full conversation history,
+            // so we only send the new user message (no need to rebuild old turns).
+            let response = await llmService.chat(userMessage: userContent)
 
             messages.append(ChatMessage(role: "assistant", content: response, timestamp: Date()))
 
@@ -225,17 +227,5 @@ final class ConversationViewModel {
             authAlertMessage = error.localizedDescription
             showAuthAlert = true
         }
-    }
-
-    private func buildPrompt(emotion: String? = nil) -> String {
-        let maxMessages = 6
-        let recent = messages.suffix(maxMessages)
-        var lines: [String] = []
-        for msg in recent {
-            let prefix = msg.role == "user" ? "User" : "Assistant"
-            lines.append("\(prefix): \(msg.content)")
-        }
-        lines.append("Assistant:")
-        return lines.joined(separator: "\n")
     }
 }

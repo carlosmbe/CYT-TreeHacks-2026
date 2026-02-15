@@ -87,7 +87,7 @@ User query
   │
   ├─ RAGService.makeGroundedPrompt() ← budget-capped to fit context window
   │
-  └─ LLMService.generate()          ← Apple Foundation Models (on-device LLM)
+  └─ LLMService.chat()              ← NVIDIA Nemotron-Mini-4B via llama.cpp (on-device, multi-turn)
 ```
 
 ## Important

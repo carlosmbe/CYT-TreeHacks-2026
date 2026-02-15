@@ -4,7 +4,7 @@ import Foundation
 /// vector index and an on-device query embedder.
 ///
 /// At startup, call `loadIndex()` to read the bundled index.
-/// At query time, call `search(query:)` → `makeGroundedPrompt(query:hits:)`.
+/// At query time, call `search(query:)` → `makeContextSnippet(hits:maxChars:)`.
 actor RAGService {
     struct SearchConfig: Sendable {
         var topK: Int = 3
@@ -40,44 +40,24 @@ actor RAGService {
         )
     }
 
-    /// Maximum character budget for the full grounded prompt.
-    /// The on-device Foundation Model has a small context window;
-    /// keeping prompts under this limit avoids "exceeded context" errors.
-    /// Budget for the grounded prompt sent as the user turn.
-    /// Reserve ~200 chars headroom for the LLMService session instructions (system prompt).
-    private static let maxPromptChars = 2600
+    /// Build a context-only snippet from RAG hits, budget-capped to `maxChars`.
+    /// Used for multi-turn chat where the user message and conversation history
+    /// are handled separately by the KV cache.
+    /// Returns `nil` if no hits pass the budget.
+    func makeContextSnippet(hits: [RAGSearchHit], maxChars: Int) -> String? {
+        guard !hits.isEmpty else { return nil }
 
-    /// Build a grounded prompt that includes retrieved context for the LLM.
-    func makeGroundedPrompt(query: String, hits: [RAGSearchHit]) -> String {
-        guard !hits.isEmpty else {
-            return """
-            User question:
-            \(query)
-
-            No retrieved context is available. Respond in the best way you can to aid the user. 
-            """
-        }
-
-        // Build context incrementally, stopping before we exceed the budget.
-        let preamble = """
-        Answer using only the context below.
-
-        Question: \(query)
-
-        Context:
-
-        """
-
-        var contextParts: [String] = []
-        var totalLen = preamble.count
+        var parts: [String] = []
+        var totalLen = 0
 
         for (idx, hit) in hits.enumerated() {
             let part = "[\(idx + 1)] \(hit.chunk.text)"
-            if totalLen + part.count + 2 > Self.maxPromptChars { break }
-            contextParts.append(part)
-            totalLen += part.count + 2 // +2 for newlines
+            if totalLen + part.count + 2 > maxChars { break }
+            parts.append(part)
+            totalLen += part.count + 2
         }
 
-        return preamble + contextParts.joined(separator: "\n\n")
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: "\n\n")
     }
 }

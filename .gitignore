@@ -11,3 +11,6 @@ CYT.xcodeproj/xcuserdata/tomsmail.xcuserdatad/
 FastVLMModel/FastVLM/model/model.safetensors
 *CYT.xcodeproj/*
 /MiniLMEmbedder.mlpackage
+
+# NVIDIA Nemotron GGUF model (~2.7 GB)
+*.gguf
