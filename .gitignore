@@ -9,3 +9,4 @@ CYT.xcodeproj/xcuserdata/tomsmail.xcuserdatad/
 /CYT.xcodeproj
 /CYT/MiniLMEmbedder.mlpackage
 FastVLMModel/FastVLM/model/model.safetensors
+*CYT.xcodeproj/*
