@@ -55,7 +55,7 @@ final class TextToSpeechService {
         // Use .playback so audio continues in background (no mic needed during TTS).
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers, .duckOthers])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers, .duckOthers])
             try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
             return

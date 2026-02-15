@@ -10,6 +10,7 @@
 
 import SwiftUI
 import ActivityKit
+import AVKit
 import os
 
 // MARK: - Chat Message
@@ -66,6 +67,11 @@ struct ConversationView: View {
                 }
             }
 
+            // PiP host (invisible, must be in view hierarchy)
+            PiPHostView(pipService: viewModel.pipService)
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+
             // Side drawer cards
             FloatingCardStack(
                 cards: viewModel.visibleCards,
@@ -89,10 +95,29 @@ struct ConversationView: View {
             await viewModel.loadModel()
             await viewModel.fetchHealthData()
             viewModel.startLiveActivity()
+            // Allow hostView to settle in hierarchy before configuring PiP
+            try? await Task.sleep(for: .milliseconds(500))
+            viewModel.pipService.configure()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background {
+            switch newPhase {
+            case .inactive:
+                // Start PiP proactively during transition to background
+                if viewModel.conversationState != .idle && !viewModel.pipService.userDismissedPiP {
+                    viewModel.pipService.startPiP()
+                }
+            case .background:
                 viewModel.updateLiveActivity()
+                if viewModel.conversationState != .idle && !viewModel.pipService.userDismissedPiP && !viewModel.pipService.isPiPActive {
+                    viewModel.pipService.startPiP()
+                }
+            case .active:
+                if viewModel.pipService.isPiPActive {
+                    viewModel.pipService.stopPiP()
+                }
+                viewModel.pipService.resetDismissFlag()
+            @unknown default:
+                break
             }
         }
         .navigationDestination(isPresented: $showSummary) {
@@ -636,6 +661,19 @@ struct ConversationView: View {
     }
 }
 
+// MARK: - PiP Host View (UIKit bridge)
+
+@available(iOS 26.0, *)
+private struct PiPHostView: UIViewRepresentable {
+    let pipService: PiPService
+
+    func makeUIView(context: Context) -> UIView {
+        pipService.hostView
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
+}
+
 // MARK: - Message Bubble
 
 private struct MessageBubble: View {
@@ -705,12 +743,14 @@ final class ConversationViewModel {
         return .idle
     }
 
+    let pipService = PiPService()
     private let llmService = LLMService()
     private let speechRecognizer = SpeechRecognizer()
     private let emotionClassifier = EmotionClassifierService()
     private let textToSpeechService = TextToSpeechService()
     private let healthProvider = HealthDataProvider()
     private var healthSnapshot = HealthSnapshot()
+    private var sessionStartDate = Date()
     private var emotionHistory: [String] = []
     private var ttsEnabledForSession = true
     private var liveActivity: Activity<ConversationActivityAttributes>?
@@ -754,8 +794,10 @@ final class ConversationViewModel {
         do {
             try speechRecognizer.startRecording()
             isRecording = true
+            sessionStartDate = Date()
             startAmplitudeThrottle()
             updateLiveActivity()
+            syncPiPState()
         } catch SpeechRecognizerError.authorizationDenied {
             authAlertMessage = "Speech recognition was denied. Enable it in Settings to use voice."
             showAuthAlert = true
@@ -785,6 +827,7 @@ final class ConversationViewModel {
         audioAmplitude = 0
         stopAmplitudeThrottle()
         updateLiveActivity()
+        syncPiPState()
         Self.logger.info("Conversation paused")
     }
 
@@ -828,10 +871,12 @@ final class ConversationViewModel {
         isGenerating = true
         turnCount += 1
         let currentTurn = turnCount
+        syncPiPState()
 
         defer {
             isGenerating = false
             isSpeaking = false
+            syncPiPState()
         }
 
         async let emotionTask: String? = emotionClassifier.classify(audioURL: audioURL)
@@ -843,6 +888,7 @@ final class ConversationViewModel {
             if !hasMoodDetected {
                 hasMoodDetected = true
             }
+            syncPiPState()
         }
 
         Self.logger.info("[Turn \(currentTurn)] Emotion: \(emotion ?? "none"), Mood: \(self.currentMood), hasMoodDetected: \(self.hasMoodDetected)")
@@ -862,8 +908,10 @@ final class ConversationViewModel {
         if ttsEnabled {
             isSpeaking = true
             isGenerating = false
+            syncPiPState()
             await textToSpeechService.speak(text: response, interruptible: true)
             isSpeaking = false
+            syncPiPState()
 
             Self.logger.info("[Turn \(currentTurn)] TTS complete, state: \(String(describing: self.conversationState))")
 
@@ -881,6 +929,7 @@ final class ConversationViewModel {
         guard isSpeaking else { return }
         textToSpeechService.stop()
         isSpeaking = false
+        syncPiPState()
     }
 
     // MARK: - Card Suggestion Engine
@@ -938,6 +987,7 @@ final class ConversationViewModel {
         suggestedCards.append(card)
         visibleCards.append(card)
         updateLiveActivity()
+        syncPiPState()
     }
 
     func dismissCard(_ card: CarePackageCard) {
@@ -977,6 +1027,7 @@ final class ConversationViewModel {
         )
 
         endLiveActivity()
+        pipService.stopPiP()
     }
 
     func resetConversation() {
@@ -1139,6 +1190,7 @@ final class ConversationViewModel {
         isSpeaking = false
         stopAmplitudeThrottle()
         endLiveActivity()
+        pipService.stopPiP()
         resetConversation()
     }
 
@@ -1149,6 +1201,7 @@ final class ConversationViewModel {
         amplitudeThrottleTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.updateLiveActivity()
+                self?.syncPiPState()
             }
         }
     }
@@ -1165,5 +1218,30 @@ final class ConversationViewModel {
         case 0.25..<0.55: return 2
         default: return 3
         }
+    }
+
+    // MARK: - PiP State Sync
+
+    private func syncPiPState() {
+        pipService.isRecording = isRecording
+        pipService.audioLevel = amplitudeToLevel(audioAmplitude)
+        pipService.moodColor = currentMood
+        pipService.sessionStart = sessionStartDate
+        pipService.latestCardTitle = visibleCards.last?.title
+        pipService.latestCardIcon = visibleCards.last?.sfSymbol
+
+        if isPaused {
+            pipService.statusText = "Paused"
+        } else if isSpeaking {
+            pipService.statusText = "Vera is speaking..."
+        } else if isGenerating {
+            pipService.statusText = "Thinking..."
+        } else if isRecording {
+            pipService.statusText = "Listening..."
+        } else {
+            pipService.statusText = "Tap to talk"
+        }
+
+        pipService.setNeedsRender()
     }
 }

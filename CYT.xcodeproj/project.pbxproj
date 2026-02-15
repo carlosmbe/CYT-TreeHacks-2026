@@ -75,11 +75,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B61D65742F40740E0024E69A /* FastVLMModel */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FastVLMModel;
-			sourceTree = "<group>";
-		};
 		B637FAAF2F41846B009D9660 /* VeraLiveActivity */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -151,7 +146,6 @@
 		B643C52F2F40651E009324F2 = {
 			isa = PBXGroup;
 			children = (
-				B61D65742F40740E0024E69A /* FastVLMModel */,
 				B643C53A2F40651E009324F2 /* CYT */,
 				B637FAAF2F41846B009D9660 /* VeraLiveActivity */,
 				B61D656D2F40739D0024E69A /* Frameworks */,
@@ -209,7 +203,6 @@
 				B637FABC2F41846C009D9660 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				B61D65742F40740E0024E69A /* FastVLMModel */,
 				B643C53A2F40651E009324F2 /* CYT */,
 			);
 			name = CYT;
