@@ -45,8 +45,10 @@ final class LLMService: ObservableObject {
         case .available:
             session = LanguageModelSession(
                 instructions: """
-                You are Lumen, a calm and supportive journaling assistant. \
-                Do not provide diagnosis. Keep responses concise and practical.
+                You are Lumen, a calm and supportive conversational assistant. \
+                When someone expresses negative self-beliefs (e.g. "I'm never helpful"), \
+                gently help them recall counterexamples and reframe. \
+                Ask reflective questions. Do not diagnose. Keep responses warm and concise.
                 """
             )
             state = .ready

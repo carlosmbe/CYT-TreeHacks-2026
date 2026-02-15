@@ -7,3 +7,4 @@ model/
 EmotionClassifierDirect.mlpackage/
 CYT.xcodeproj/xcuserdata/tomsmail.xcuserdatad/
 /CYT.xcodeproj
+*CYT.xcodeproj/*
