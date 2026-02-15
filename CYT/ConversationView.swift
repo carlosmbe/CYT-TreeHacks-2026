@@ -2,7 +2,7 @@
 //  ConversationView.swift
 //  CYT
 //
-//  Voice conversation with Lumen. Speech-to-text and emotion classification run in parallel.
+//  Voice conversation: STT + emotion classification -> LLM -> TTS.
 //
 
 import SwiftUI
@@ -178,7 +178,7 @@ final class ConversationViewModel {
             let userContent = emotion.map { "\(transcript) (voice tone: \($0))" } ?? transcript
             messages.append(ChatMessage(role: "user", content: userContent, timestamp: Date()))
 
-            let prompt = buildPrompt(latestUserMessage: transcript, emotion: emotion)
+            let prompt = buildPrompt(emotion: emotion)
             let response = await llmService.generate(prompt: prompt)
 
             messages.append(ChatMessage(role: "assistant", content: response, timestamp: Date()))
@@ -192,7 +192,7 @@ final class ConversationViewModel {
         }
     }
 
-    private func buildPrompt(latestUserMessage: String, emotion: String?) -> String {
+    private func buildPrompt(emotion: String? = nil) -> String {
         let maxMessages = 6
         let recent = messages.suffix(maxMessages)
         var lines: [String] = []
