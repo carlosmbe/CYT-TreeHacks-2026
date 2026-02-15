@@ -17,6 +17,7 @@ struct ChatMessage: Identifiable {
 @available(iOS 26.0, *)
 struct ConversationView: View {
     @State private var viewModel = ConversationViewModel()
+    @AppStorage("ttsEnabled") private var ttsEnabled = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,7 +44,7 @@ struct ConversationView: View {
                 HStack(spacing: 16) {
                     if viewModel.isRecording {
                         Button {
-                            Task { await viewModel.stopAndProcess() }
+                            Task { await viewModel.stopAndProcess(ttsEnabled: ttsEnabled) }
                         } label: {
                             Image(systemName: "stop.circle.fill")
                                 .font(.system(size: 56))
@@ -65,6 +66,8 @@ struct ConversationView: View {
                         if viewModel.isGenerating {
                             ProgressView()
                         }
+
+                        Toggle("Lumen speaks", isOn: $ttsEnabled)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -126,6 +129,7 @@ final class ConversationViewModel {
     private let llmService = LLMService()
     private let speechRecognizer = SpeechRecognizer()
     private let emotionClassifier = EmotionClassifierService()
+    private let textToSpeechService = TextToSpeechService()
 
     var canRecord: Bool {
         speechRecognizer.authorizationStatus == .authorized && !isGenerating
@@ -137,6 +141,7 @@ final class ConversationViewModel {
 
     func loadModel() async {
         await llmService.loadModel()
+        await textToSpeechService.initialize()
     }
 
     func startRecording() async {
@@ -153,7 +158,7 @@ final class ConversationViewModel {
         }
     }
 
-    func stopAndProcess() async {
+    func stopAndProcess(ttsEnabled: Bool = true) async {
         guard isRecording else { return }
         isRecording = false
         isGenerating = true
@@ -177,6 +182,10 @@ final class ConversationViewModel {
             let response = await llmService.generate(prompt: prompt)
 
             messages.append(ChatMessage(role: "assistant", content: response, timestamp: Date()))
+
+            if ttsEnabled {
+                await textToSpeechService.speak(text: response)
+            }
         } catch {
             authAlertMessage = error.localizedDescription
             showAuthAlert = true
