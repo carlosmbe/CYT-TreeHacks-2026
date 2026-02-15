@@ -2,31 +2,30 @@
 """
 Export sentence-transformers model to Core ML (.mlpackage)
 ==========================================================
-Exports the same model used by build_rag_index.py so the on-device
-query embeddings live in the same vector space as the pre-computed
-document embeddings.
+Exports all-MiniLM-L6-v2 so the on-device query embeddings live in the
+same vector space as the pre-computed document embeddings.
 
-Recommended environment (use the included .venv):
+Recommended environment:
     python3 -m venv .venv && source .venv/bin/activate
     pip install "coremltools==8.1" "torch==2.5.1" "transformers==4.46.0" "numpy<2"
 
 Usage:
-    python scripts/export_coreml_embedder.py \
-        --model sentence-transformers/all-MiniLM-L6-v2 \
-        --output MiniLMEmbedder.mlpackage \
-        --max-length 128
+    python scripts/export_coreml_embedder.py
 
-Then drag the .mlpackage into your Xcode project (target: CYT).
+Then drag MiniLMEmbedder.mlpackage into your Xcode project (target: CYT).
 Build once so Xcode generates the Swift wrapper class.
 """
-
-import argparse
 
 import coremltools as ct
 import numpy as np
 import torch
 import torch.nn as nn
 from transformers import AutoModel, AutoTokenizer
+
+# ---- Config ----
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+OUTPUT_PATH = "MiniLMEmbedder.mlpackage"
+MAX_LENGTH = 256
 
 
 class EmbedderWrapper(nn.Module):
@@ -43,30 +42,9 @@ class EmbedderWrapper(nn.Module):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Export embedding model to Core ML.")
-    parser.add_argument(
-        "--model",
-        default="sentence-transformers/all-MiniLM-L6-v2",
-        help="HuggingFace model name.",
-    )
-    parser.add_argument(
-        "--output",
-        default="MiniLMEmbedder.mlpackage",
-        help="Output .mlpackage path.",
-    )
-    parser.add_argument(
-        "--max-length",
-        type=int,
-        default=128,
-        help="Max token sequence length (pad/truncate to this).",
-    )
-    args = parser.parse_args()
-
-    seq_len = args.max_length
-
-    print(f"Loading {args.model}...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
-    base_model = AutoModel.from_pretrained(args.model)
+    print(f"Loading {MODEL_NAME}...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    base_model = AutoModel.from_pretrained(MODEL_NAME)
     base_model.eval()
 
     wrapper = EmbedderWrapper(base_model)
@@ -77,7 +55,7 @@ def main():
         "hello world",
         return_tensors="pt",
         padding="max_length",
-        max_length=seq_len,
+        max_length=MAX_LENGTH,
         truncation=True,
     )
 
@@ -90,16 +68,16 @@ def main():
     mlmodel = ct.convert(
         traced,
         inputs=[
-            ct.TensorType(name="input_ids", shape=(1, seq_len), dtype=np.int32),
-            ct.TensorType(name="attention_mask", shape=(1, seq_len), dtype=np.int32),
+            ct.TensorType(name="input_ids", shape=(1, MAX_LENGTH), dtype=np.int32),
+            ct.TensorType(name="attention_mask", shape=(1, MAX_LENGTH), dtype=np.int32),
         ],
         outputs=[ct.TensorType(name="last_hidden_state")],
         compute_units=ct.ComputeUnit.ALL,
         minimum_deployment_target=ct.target.iOS16,
     )
 
-    mlmodel.save(args.output)
-    print(f"Saved {args.output}")
+    mlmodel.save(OUTPUT_PATH)
+    print(f"Saved {OUTPUT_PATH}")
     print("Drag this into your Xcode project and build to generate Swift wrappers.")
 
 
