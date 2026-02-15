@@ -21,17 +21,17 @@ final class LLMService: ObservableObject {
         case failed(String)
     }
 
-    struct GenerationConfig {
-        var maxNewTokens: Int = 256
-        var temperature: Float = 0.7
-    }
-
     @Published private(set) var state: State = .idle
 
     private var generationTask: Task<String, Never>?
+    private let ragService: RAGService?
 #if canImport(FoundationModels)
     private var session: LanguageModelSession?
 #endif
+
+    init(ragService: RAGService? = LLMService.defaultRAGService()) {
+        self.ragService = ragService
+    }
 
     func loadModel() async {
         if case .loading = state {
@@ -49,6 +49,12 @@ final class LLMService: ObservableObject {
                 Do not provide diagnosis. Keep responses concise and practical.
                 """
             )
+            do {
+                try await ragService?.loadIndex()
+            } catch {
+                state = .failed("RAG index load failed: \(error.localizedDescription)")
+                return
+            }
             state = .ready
         case .unavailable(let reason):
             state = .failed(unavailableMessage(for: reason))
@@ -59,10 +65,6 @@ final class LLMService: ObservableObject {
     }
 
     func generate(prompt: String) async -> String {
-        await generate(prompt: prompt, config: GenerationConfig())
-    }
-
-    func generate(prompt: String, config: GenerationConfig) async -> String {
         let cleanPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanPrompt.isEmpty else {
             return ""
@@ -82,7 +84,6 @@ final class LLMService: ObservableObject {
             }
 
             do {
-                _ = config
                 let response = try await session.respond(to: cleanPrompt)
                 return response.content
             } catch {
@@ -91,7 +92,6 @@ final class LLMService: ObservableObject {
         }
 #else
         generationTask = Task<String, Never> {
-            _ = config
             return "FoundationModels framework unavailable in this SDK."
         }
 #endif
@@ -102,6 +102,23 @@ final class LLMService: ObservableObject {
             state = .ready
         }
         return output
+    }
+
+    func generateWithRAG(
+        query: String,
+        searchConfig: RAGService.SearchConfig = .init()
+    ) async -> String {
+        guard let ragService else {
+            return "RAG is not configured."
+        }
+
+        do {
+            let hits = try await ragService.search(query: query, config: searchConfig)
+            let groundedPrompt = await ragService.makeGroundedPrompt(query: query, hits: hits)
+            return await generate(prompt: groundedPrompt)
+        } catch {
+            return "RAG retrieval failed: \(error.localizedDescription)"
+        }
     }
 
     func cancel() {
@@ -119,6 +136,14 @@ final class LLMService: ObservableObject {
 #else
         return false
 #endif
+    }
+
+    private nonisolated static func defaultRAGService() -> RAGService {
+        let dimension = 384
+        return RAGService(
+            embedder: CoreMLEmbedder(dimensions: dimension),
+            index: BundledVectorIndex(dimension: dimension)
+        )
     }
 }
 
