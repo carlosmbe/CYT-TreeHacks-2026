@@ -12,16 +12,20 @@ struct CYTApp: App {
     var body: some Scene {
         WindowGroup {
             TabView {
+                CarePackageView()
+                    .tabItem {
+                        Label("Care Package", systemImage: "heart.circle.fill")
+                    }
+
                 HealthTestView()
                     .tabItem {
                         Label("Health Test", systemImage: "heart.text.square")
                     }
-                
+
                 ContentView()
                     .tabItem {
                         Label("Camera", systemImage: "camera")
                     }
-                
             }
 
         }
