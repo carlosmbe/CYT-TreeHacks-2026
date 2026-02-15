@@ -23,12 +23,16 @@ final class SpeechRecognizer {
 
     private(set) var authorizationStatus: AuthorizationStatus = .notDetermined
     private(set) var isRecording = false
+    private(set) var currentAmplitude: Float = 0
 
     /// Callback invoked when silence is detected for silenceDurationThreshold. Set before startRecording().
     var onEndOfSpeechDetected: (() async -> Void)?
 
-    /// Duration of silence (seconds) before auto-stop. Default 1.5.
-    var silenceDurationThreshold: TimeInterval = 1.5
+    /// Callback for real-time amplitude updates (0.0–1.0 normalized RMS). Called on audio thread.
+    var onAmplitudeUpdate: ((Float) -> Void)?
+
+    /// Duration of silence (seconds) before auto-stop. Default 3.0.
+    var silenceDurationThreshold: TimeInterval = 3.0
 
     private let recognizer: SFSpeechRecognizer?
     private let audioEngine = AVAudioEngine()
@@ -64,6 +68,37 @@ final class SpeechRecognizer {
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
         recognizer?.supportsOnDeviceRecognition = true
         updateAuthorizationStatus()
+
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                self?.handleAudioInterruption(notification)
+            }
+        }
+    }
+
+    private func handleAudioInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        if type == .ended {
+            let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                let session = AVAudioSession.sharedInstance()
+                try? session.setActive(true, options: .notifyOthersOnDeactivation)
+                if isRecording {
+                    try? audioEngine.start()
+                }
+                if isInterruptMonitoring {
+                    try? interruptEngine.start()
+                }
+            }
+        }
     }
 
     func requestAuthorization() {
@@ -91,11 +126,17 @@ final class SpeechRecognizer {
         recognitionTask?.cancel()
         recognitionTask = nil
 
+        // Clean up any stale tap/engine state from a previous session
+        let inputNode = audioEngine.inputNode
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        inputNode.removeTap(onBus: 0)
+
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers, .duckOthers])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-        let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
 
         tempAudioURL = FileManager.default.temporaryDirectory
@@ -133,6 +174,14 @@ final class SpeechRecognizer {
 
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: recordingFormat) { [weak self] buffer, _ in
             self?.recognitionRequest?.append(buffer)
+
+            // Extract RMS amplitude for UI visualization
+            let rms = Self.computeRMS(buffer: buffer)
+            let amplitudeCallback = self?.onAmplitudeUpdate
+            amplitudeCallback?(min(rms * 5.0, 1.0)) // normalized & boosted for visual range
+            Task { @MainActor [weak self] in
+                self?.currentAmplitude = min(rms * 5.0, 1.0)
+            }
 
             Self.processSilenceDetection(
                 buffer: buffer,
@@ -194,6 +243,7 @@ final class SpeechRecognizer {
 
         audioFile = nil
         isRecording = false
+        currentAmplitude = 0
 
         let transcript: String
         do {
@@ -220,14 +270,15 @@ final class SpeechRecognizer {
     }
 
     func cancelRecording() {
-        guard isRecording else { return }
-
         audioEngine.inputNode.removeTap(onBus: 0)
-        audioEngine.stop()
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
         recognitionRequest?.endAudio()
         recognitionRequest = nil
         audioFile = nil
         isRecording = false
+        currentAmplitude = 0
 
         if let cont = transcriptContinuation {
             transcriptContinuation = nil
@@ -248,7 +299,7 @@ final class SpeechRecognizer {
 
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers, .duckOthers])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
             let inputNode = interruptEngine.inputNode
@@ -325,6 +376,24 @@ final class SpeechRecognizer {
             state.sampleCount = 0
         }
         state.lock.unlock()
+    }
+
+    /// Compute RMS amplitude from an audio buffer (0.0–∞, typically 0–0.2 for speech).
+    private static func computeRMS(buffer: AVAudioPCMBuffer) -> Float {
+        guard let channelData = buffer.floatChannelData else { return 0 }
+        let frameLength = Int(buffer.frameLength)
+        let channelCount = Int(buffer.format.channelCount)
+        guard frameLength > 0, channelCount > 0 else { return 0 }
+
+        var sumSq: Float = 0
+        for ch in 0..<channelCount {
+            let ptr = channelData[ch]
+            for i in 0..<frameLength {
+                let s = ptr[i]
+                sumSq += s * s
+            }
+        }
+        return sqrt(sumSq / Float(frameLength * channelCount))
     }
 
     private static func processSilenceDetection(

@@ -176,6 +176,35 @@ final class LLMService: ObservableObject {
         return output
     }
 
+    /// Generates a summary note from the full conversation and suggested cards.
+    func generateSummary(messages: [ChatMessage], cards: [CarePackageCard], healthContext: String) async -> String {
+        var promptLines: [String] = []
+        promptLines.append("Summarize this conversation in 2-3 warm sentences as Vera. Include what was discussed, how the user seemed to feel, and any self-care suggestions that were offered.")
+        promptLines.append("")
+
+        if !healthContext.isEmpty {
+            promptLines.append("Health context: \(healthContext)")
+            promptLines.append("")
+        }
+
+        if !cards.isEmpty {
+            let cardNames = cards.map { "\($0.title) (\($0.category.rawValue))" }.joined(separator: ", ")
+            promptLines.append("Cards suggested: \(cardNames)")
+            promptLines.append("")
+        }
+
+        promptLines.append("Conversation:")
+        for msg in messages {
+            let prefix = msg.role == "user" ? "User" : "Vera"
+            promptLines.append("\(prefix): \(msg.content)")
+        }
+        promptLines.append("")
+        promptLines.append("Write Vera's summary note:")
+
+        let prompt = promptLines.joined(separator: "\n")
+        return await chat(userMessage: prompt)
+    }
+
     /// Reset the conversation context. Call when the user ends a conversation
     /// or wants to start fresh. Re-primes the KV cache with the system prompt.
     func resetConversation() async {

@@ -20,27 +20,89 @@
 		B61D65BD2F4076000024E69A /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B61D65BE2F4076000024E69A /* HealthKit.framework */; };
 		B637F5512F417314009D9660 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = B637F5502F417314009D9660 /* FluidAudio */; };
 		B637F5532F417314009D9660 /* FluidAudioEspeak in Frameworks */ = {isa = PBXBuildFile; productRef = B637F5522F417314009D9660 /* FluidAudioEspeak */; };
+		B637FAAC2F41846B009D9660 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B637FAAB2F41846B009D9660 /* WidgetKit.framework */; };
+		B637FAAE2F41846B009D9660 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B637FAAD2F41846B009D9660 /* SwiftUI.framework */; };
+		B637FABD2F41846C009D9660 /* VeraLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B637FAAA2F41846B009D9660 /* VeraLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B637FABB2F41846C009D9660 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B643C5302F40651E009324F2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B637FAA92F41846B009D9660;
+			remoteInfo = VeraLiveActivityExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CA00000C2F50000000000002 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B637FABD2F41846C009D9660 /* VeraLiveActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B61D65BE2F4076000024E69A /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = HealthKit.framework; sourceTree = SDKROOT; };
+		B637FAAA2F41846B009D9660 /* VeraLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VeraLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B637FAAB2F41846B009D9660 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		B637FAAD2F41846B009D9660 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		B643C5382F40651E009324F2 /* CYT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CYT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B63701012F41883E009D9660 /* Exceptions for "CYT" folder in "CYT" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B643C5372F40651E009324F2 /* CYT */;
+		};
+		B637FABE2F41846C009D9660 /* Exceptions for "VeraLiveActivity" folder in "VeraLiveActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B637FAA92F41846B009D9660 /* VeraLiveActivityExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B61D65742F40740E0024E69A /* FastVLMModel */ = {
+		B637FAAF2F41846B009D9660 /* VeraLiveActivity */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FastVLMModel;
+			exceptions = (
+				B637FABE2F41846C009D9660 /* Exceptions for "VeraLiveActivity" folder in "VeraLiveActivityExtension" target */,
+			);
+			path = VeraLiveActivity;
 			sourceTree = "<group>";
 		};
 		B643C53A2F40651E009324F2 /* CYT */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B63701012F41883E009D9660 /* Exceptions for "CYT" folder in "CYT" target */,
+			);
 			path = CYT;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B637FAA72F41846B009D9660 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B637FAAE2F41846B009D9660 /* SwiftUI.framework in Frameworks */,
+				B637FAAC2F41846B009D9660 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B643C5352F40651E009324F2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -75,6 +137,8 @@
 		B61D656D2F40739D0024E69A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B637FAAB2F41846B009D9660 /* WidgetKit.framework */,
+				B637FAAD2F41846B009D9660 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -82,8 +146,8 @@
 		B643C52F2F40651E009324F2 = {
 			isa = PBXGroup;
 			children = (
-				B61D65742F40740E0024E69A /* FastVLMModel */,
 				B643C53A2F40651E009324F2 /* CYT */,
+				B637FAAF2F41846B009D9660 /* VeraLiveActivity */,
 				B61D656D2F40739D0024E69A /* Frameworks */,
 				B643C5392F40651E009324F2 /* Products */,
 				71D6557D2F41264400644D98 /* Recovered References */,
@@ -94,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				B643C5382F40651E009324F2 /* CYT.app */,
+				B637FAAA2F41846B009D9660 /* VeraLiveActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,6 +166,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B637FAA92F41846B009D9660 /* VeraLiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B637FABF2F41846C009D9660 /* Build configuration list for PBXNativeTarget "VeraLiveActivityExtension" */;
+			buildPhases = (
+				B637FAA62F41846B009D9660 /* Sources */,
+				B637FAA72F41846B009D9660 /* Frameworks */,
+				B637FAA82F41846B009D9660 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B637FAAF2F41846B009D9660 /* VeraLiveActivity */,
+			);
+			name = VeraLiveActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = VeraLiveActivityExtension;
+			productReference = B637FAAA2F41846B009D9660 /* VeraLiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		B643C5372F40651E009324F2 /* CYT */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B643C5432F40651F009324F2 /* Build configuration list for PBXNativeTarget "CYT" */;
@@ -108,13 +195,14 @@
 				B643C5342F40651E009324F2 /* Sources */,
 				B643C5352F40651E009324F2 /* Frameworks */,
 				B643C5362F40651E009324F2 /* Resources */,
+				CA00000C2F50000000000002 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B637FABC2F41846C009D9660 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				B61D65742F40740E0024E69A /* FastVLMModel */,
 				B643C53A2F40651E009324F2 /* CYT */,
 			);
 			name = CYT;
@@ -146,6 +234,9 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					B637FAA92F41846B009D9660 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					B643C5372F40651E009324F2 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -174,11 +265,19 @@
 			projectRoot = "";
 			targets = (
 				B643C5372F40651E009324F2 /* CYT */,
+				B637FAA92F41846B009D9660 /* VeraLiveActivityExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B637FAA82F41846B009D9660 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B643C5362F40651E009324F2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -189,6 +288,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B637FAA62F41846B009D9660 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B643C5342F40651E009324F2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -198,7 +304,77 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		B637FABC2F41846C009D9660 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B637FAA92F41846B009D9660 /* VeraLiveActivityExtension */;
+			targetProxy = B637FABB2F41846C009D9660 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		B637FAC02F41846C009D9660 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5UJL58M7XY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VeraLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VeraLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY.VeraLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B637FAC12F41846C009D9660 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5UJL58M7XY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VeraLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VeraLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY.VeraLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		B643C5412F40651F009324F2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -331,10 +507,14 @@
 				DEVELOPMENT_TEAM = 5UJL58M7XY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CYT/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TreeHacks2026;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need to see that pretty face magic pal";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Need your sweet data";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "To provide personalized insights based on your heart rate from Apple Watch.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vera needs your microphone to listen and respond to you.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "On-device speech recognition powers voice conversations with Vera.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -369,10 +549,14 @@
 				DEVELOPMENT_TEAM = 5UJL58M7XY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CYT/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TreeHacks2026;
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need to see that pretty face magic pal";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Need your sweet data";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "To provide personalized insights based on your heart rate from Apple Watch.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vera needs your microphone to listen and respond to you.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "On-device speech recognition powers voice conversations with Vera.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -399,6 +583,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B637FABF2F41846C009D9660 /* Build configuration list for PBXNativeTarget "VeraLiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B637FAC02F41846C009D9660 /* Debug */,
+				B637FAC12F41846C009D9660 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		B643C5332F40651E009324F2 /* Build configuration list for PBXProject "CYT" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -11,24 +11,17 @@ import SwiftUI
 struct CYTApp: App {
     var body: some Scene {
         WindowGroup {
-            CarePackageView()
-//            TabView {
-//                CarePackageView()
-//                    .tabItem {
-//                        Label("Care Package", systemImage: "heart.circle.fill")
-//                    }
-//
-//                HealthTestView()
-//                    .tabItem {
-//                        Label("Health Test", systemImage: "heart.text.square")
-//                    }
-//
-//                ContentView()
-//                    .tabItem {
-//                        Label("Camera", systemImage: "camera")
-//                    }
-//            }
-
+            NavigationStack {
+                if #available(iOS 26.0, *) {
+                    ConversationView()
+                } else {
+                    ContentUnavailableView(
+                        "Requires iOS 26",
+                        systemImage: "mic.slash",
+                        description: Text("Voice conversation requires iOS 26 or later.")
+                    )
+                }
+            }
         }
     }
 }
