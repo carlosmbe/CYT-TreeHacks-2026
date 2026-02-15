@@ -43,19 +43,15 @@ struct ConversationView: View {
 
                 HStack(spacing: 16) {
                     if viewModel.isRecording {
-                        Button {
-                            Task { await viewModel.stopAndProcess(ttsEnabled: ttsEnabled) }
-                        } label: {
-                            Image(systemName: "stop.circle.fill")
-                                .font(.system(size: 56))
-                                .foregroundStyle(.red)
-                        }
-                        Text("Tap to stop")
+                        Image(systemName: "mic.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(.red)
+                        Text("Listening...")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
                         Button {
-                            Task { await viewModel.startRecording() }
+                            Task { await viewModel.startRecording(ttsEnabled: ttsEnabled) }
                         } label: {
                             Image(systemName: "mic.circle.fill")
                                 .font(.system(size: 56))
@@ -75,6 +71,13 @@ struct ConversationView: View {
             }
             .navigationTitle("Talk to Lumen")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("End conversation") {
+                        viewModel.endConversation()
+                    }
+                }
+            }
             .alert("Speech Recognition", isPresented: $viewModel.showAuthAlert) {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -144,8 +147,12 @@ final class ConversationViewModel {
         await textToSpeechService.initialize()
     }
 
-    func startRecording() async {
+    func startRecording(ttsEnabled: Bool = true) async {
         guard !isRecording else { return }
+        self.ttsEnabledForSession = ttsEnabled
+        speechRecognizer.onEndOfSpeechDetected = { [weak self] in
+            await self?.handleAutoStop()
+        }
         do {
             try speechRecognizer.startRecording()
             isRecording = true
@@ -158,7 +165,23 @@ final class ConversationViewModel {
         }
     }
 
-    func stopAndProcess(ttsEnabled: Bool = true) async {
+    func endConversation() {
+        if isRecording {
+            speechRecognizer.cancelRecording()
+            isRecording = false
+        }
+        textToSpeechService.stop()
+        messages = []
+        isGenerating = false
+    }
+
+    private func handleAutoStop() async {
+        await stopAndProcess(ttsEnabled: ttsEnabledForSession)
+    }
+
+    private var ttsEnabledForSession = true
+
+    private func stopAndProcess(ttsEnabled: Bool = true) async {
         guard isRecording else { return }
         isRecording = false
         isGenerating = true

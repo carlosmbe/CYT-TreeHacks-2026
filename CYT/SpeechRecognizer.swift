@@ -4,6 +4,7 @@
 //
 //  On-device speech-to-text using SFSpeechRecognizer and AVAudioEngine.
 //  Writes audio to a temp file for parallel emotion classification.
+//  Auto-stops when silence is detected for silenceDurationThreshold.
 //
 
 import AVFoundation
@@ -23,6 +24,12 @@ final class SpeechRecognizer {
     private(set) var authorizationStatus: AuthorizationStatus = .notDetermined
     private(set) var isRecording = false
 
+    /// Callback invoked when silence is detected for silenceDurationThreshold. Set before startRecording().
+    var onEndOfSpeechDetected: (() async -> Void)?
+
+    /// Duration of silence (seconds) before auto-stop. Default 1.5.
+    var silenceDurationThreshold: TimeInterval = 1.5
+
     private let recognizer: SFSpeechRecognizer?
     private let audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -30,6 +37,15 @@ final class SpeechRecognizer {
     private var transcriptContinuation: CheckedContinuation<String, Error>?
     private var audioFile: AVAudioFile?
     private var tempAudioURL: URL?
+
+    private final class SilenceState: @unchecked Sendable {
+        let lock = NSLock()
+        var sampleCount = 0
+        var thresholdSamples = 0
+        var hasFired = false
+    }
+    private let silenceState = SilenceState()
+    private static let silenceAmplitudeThreshold: Float = 0.01
 
     init() {
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -96,8 +112,25 @@ final class SpeechRecognizer {
         let converter = AVAudioConverter(from: recordingFormat, to: outputFormat)
         let bufferSize: AVAudioFrameCount = 4096
 
+        silenceState.lock.lock()
+        silenceState.sampleCount = 0
+        silenceState.hasFired = false
+        silenceState.thresholdSamples = Int(recordingFormat.sampleRate * silenceDurationThreshold)
+        silenceState.lock.unlock()
+
         inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: recordingFormat) { [weak self] buffer, _ in
             self?.recognitionRequest?.append(buffer)
+
+            Self.processSilenceDetection(
+                buffer: buffer,
+                sampleRate: recordingFormat.sampleRate,
+                state: self?.silenceState,
+                onFired: { [weak self] in
+                    Task { @MainActor in
+                        await self?.onEndOfSpeechDetected?()
+                    }
+                }
+            )
 
             guard let self, let converter, let audioFile else { return }
             let frameRatio = Double(outputFormat.sampleRate) / Double(recordingFormat.sampleRate)
@@ -171,6 +204,61 @@ final class SpeechRecognizer {
         tempAudioURL = nil
 
         return (transcript, url)
+    }
+
+    func cancelRecording() {
+        guard isRecording else { return }
+
+        audioEngine.inputNode.removeTap(onBus: 0)
+        audioEngine.stop()
+        recognitionRequest?.endAudio()
+        recognitionRequest = nil
+        audioFile = nil
+        isRecording = false
+
+        if let cont = transcriptContinuation {
+            transcriptContinuation = nil
+            cont.resume(returning: "")
+        }
+        recognitionTask = nil
+        tempAudioURL = nil
+    }
+
+    private static func processSilenceDetection(
+        buffer: AVAudioPCMBuffer,
+        sampleRate: Double,
+        state: SilenceState?,
+        onFired: @escaping () -> Void
+    ) {
+        guard let state else { return }
+        guard let channelData = buffer.floatChannelData else { return }
+        let frameLength = Int(buffer.frameLength)
+        let channelCount = Int(buffer.format.channelCount)
+        guard frameLength > 0, channelCount > 0 else { return }
+
+        var sumSq: Float = 0
+        for ch in 0..<channelCount {
+            let ptr = channelData[ch]
+            for i in 0..<frameLength {
+                let s = ptr[i]
+                sumSq += s * s
+            }
+        }
+        let rms = sqrt(sumSq / Float(frameLength * channelCount))
+
+        state.lock.lock()
+        if rms < silenceAmplitudeThreshold {
+            state.sampleCount += frameLength * channelCount
+            if state.sampleCount >= state.thresholdSamples, !state.hasFired {
+                state.hasFired = true
+                state.lock.unlock()
+                onFired()
+                return
+            }
+        } else {
+            state.sampleCount = 0
+        }
+        state.lock.unlock()
     }
 }
 
