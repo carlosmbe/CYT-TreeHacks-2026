@@ -18,6 +18,7 @@
 		B61D65BA2F4074920024E69A /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = B61D65B92F4074920024E69A /* MLXVLM */; };
 		B61D65BC2F4075D40024E69A /* MLXFast in Frameworks */ = {isa = PBXBuildFile; productRef = B61D65BB2F4075D40024E69A /* MLXFast */; };
 		B61D65BD2F4076000024E69A /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B61D65BE2F4076000024E69A /* HealthKit.framework */; };
+		B630A40A2F41C3C1009C01AA /* LlamaSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B630A4092F41C3C1009C01AA /* LlamaSwift */; };
 		B637F5512F417314009D9660 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = B637F5502F417314009D9660 /* FluidAudio */; };
 		B637F5532F417314009D9660 /* FluidAudioEspeak in Frameworks */ = {isa = PBXBuildFile; productRef = B637F5522F417314009D9660 /* FluidAudioEspeak */; };
 		B637FAAC2F41846B009D9660 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B637FAAB2F41846B009D9660 /* WidgetKit.framework */; };
@@ -115,6 +116,7 @@
 				B61D65B42F4074920024E69A /* MLXEmbedders in Frameworks */,
 				B61D656C2F4073400024E69A /* Transformers in Frameworks */,
 				B61D65BA2F4074920024E69A /* MLXVLM in Frameworks */,
+				B630A40A2F41C3C1009C01AA /* LlamaSwift in Frameworks */,
 				B61D65732F4073F50024E69A /* MLXRandom in Frameworks */,
 				B61D65B82F4074920024E69A /* MLXLMCommon in Frameworks */,
 				B61D65BC2F4075D40024E69A /* MLXFast in Frameworks */,
@@ -219,6 +221,7 @@
 				B61D65BB2F4075D40024E69A /* MLXFast */,
 				B637F5502F417314009D9660 /* FluidAudio */,
 				B637F5522F417314009D9660 /* FluidAudioEspeak */,
+				B630A4092F41C3C1009C01AA /* LlamaSwift */,
 			);
 			productName = CYT;
 			productReference = B643C5382F40651E009324F2 /* CYT.app */;
@@ -258,6 +261,7 @@
 				B61D656A2F4073400024E69A /* XCRemoteSwiftPackageReference "swift-transformers" */,
 				B61D65B22F4074920024E69A /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
 				B637F54F2F417314009D9660 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+				B630A4082F41C3C1009C01AA /* XCRemoteSwiftPackageReference "llama" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B643C5392F40651E009324F2 /* Products */;
@@ -332,7 +336,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY.VeraLiveActivity;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.VERATH.VeraLiveActivity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -363,7 +367,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY.VeraLiveActivity;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.VERATH.VeraLiveActivity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -508,10 +512,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CYT/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TreeHacks2026;
-				INFOPLIST_KEY_NSCameraUsageDescription = "We need to see that pretty face magic pal";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Need your sweet data";
+				INFOPLIST_KEY_CFBundleDisplayName = Vera;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Computer Vision requires Camera Access";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "To provide personalized insights based on your health trends from Apple Watch.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "To provide personalized insights based on your heart rate from Apple Watch.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "To provide personalized insights based on new health trends from Apple Watch.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vera needs your microphone to listen and respond to you.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "On-device speech recognition powers voice conversations with Vera.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -526,7 +531,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.VERATH;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -550,10 +555,11 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CYT/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TreeHacks2026;
-				INFOPLIST_KEY_NSCameraUsageDescription = "We need to see that pretty face magic pal";
-				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Need your sweet data";
+				INFOPLIST_KEY_CFBundleDisplayName = Vera;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Computer Vision requires Camera Access";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "To provide personalized insights based on your health trends from Apple Watch.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "To provide personalized insights based on your heart rate from Apple Watch.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "To provide personalized insights based on new health trends from Apple Watch.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vera needs your microphone to listen and respond to you.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "On-device speech recognition powers voice conversations with Vera.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -568,7 +574,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.CTY;
+				PRODUCT_BUNDLE_IDENTIFIER = com.camysoftworks.dev.VERATH;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -653,6 +659,14 @@
 				minimumVersion = 2.30.3;
 			};
 		};
+		B630A4082F41C3C1009C01AA /* XCRemoteSwiftPackageReference "llama" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattt/llama.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8056.0;
+			};
+		};
 		B637F54F2F417314009D9660 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/FluidInference/FluidAudio";
@@ -713,6 +727,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B61D65652F4072E40024E69A /* XCRemoteSwiftPackageReference "mlx-swift" */;
 			productName = MLXFast;
+		};
+		B630A4092F41C3C1009C01AA /* LlamaSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B630A4082F41C3C1009C01AA /* XCRemoteSwiftPackageReference "llama" */;
+			productName = LlamaSwift;
 		};
 		B637F5502F417314009D9660 /* FluidAudio */ = {
 			isa = XCSwiftPackageProductDependency;
