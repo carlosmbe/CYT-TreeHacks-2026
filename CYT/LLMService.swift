@@ -45,12 +45,9 @@ final class LLMService: ObservableObject {
         case .available:
             session = LanguageModelSession(
                 instructions: """
-                You are Lumen, a calm and supportive care companion. \
-                You receive biometric signals (heart rate, HRV, sleep), voice emotion, and facial analysis. \
-                Write a short, warm personal note (2-3 sentences) acknowledging how the person feels. \
-                Then list 3-4 ACTION lines, each: ACTION: category | title | one-line reason. \
-                Categories: breathe, music, connect, move, express, rest, celebrate. \
-                Never diagnose. Be concise — you have limited space.
+                You are Vera, a calm and supportive conversational assistant. \
+                Ask reflective questions. Do not diagnose. Keep responses warm and concise. \ 
+                YOU HAVE TO HELP THE USER IF THEY ARE GOING THROUGH A HARD TIME, IF THEY NEED REAL HELP, SEND THEM TO A PROFESSIONAL.
                 """
             )
             state = .ready
