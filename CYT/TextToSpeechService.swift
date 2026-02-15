@@ -18,6 +18,7 @@ final class TextToSpeechService {
     private var playbackDelegate: AudioPlayerDelegate?
     private(set) var isInitialized = false
     private(set) var isPlaying = false
+    private(set) var wasInterrupted = false
 
     init() {}
 
@@ -46,13 +47,17 @@ final class TextToSpeechService {
 
     /// Synthesize and play the response. Chunks by sentence and pipelines synthesis with playback:
     /// while one sentence plays, the next is synthesized.
-    func speak(text: String) async {
+    /// - Parameter interruptible: When true, uses .playAndRecord so mic can be monitored for user interrupt.
+    func speak(text: String, interruptible: Bool = true) async {
+        wasInterrupted = false
         let sentences = Self.splitIntoSentences(text)
         guard !sentences.isEmpty else { return }
 
         var nextAudio: Data? = await synthesize(text: sentences[0])
 
         for i in 0..<sentences.count {
+            if wasInterrupted { return }
+
             let audioToPlay = nextAudio
 
             if i + 1 < sentences.count {
@@ -60,13 +65,14 @@ final class TextToSpeechService {
                 async let next: Data? = synthesize(text: nextSentence)
 
                 if let audioToPlay {
-                    await playAndWait(audioData: audioToPlay)
+                    await playAndWait(audioData: audioToPlay, interruptible: interruptible)
                 }
+                if wasInterrupted { return }
 
                 nextAudio = await next
             } else {
                 if let audioToPlay {
-                    await playAndWait(audioData: audioToPlay)
+                    await playAndWait(audioData: audioToPlay, interruptible: interruptible)
                 }
                 break
             }
@@ -74,10 +80,14 @@ final class TextToSpeechService {
     }
 
     /// Play WAV audio data and wait until playback finishes.
-    private func playAndWait(audioData: Data) async {
+    private func playAndWait(audioData: Data, interruptible: Bool = false) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             do {
-                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers])
+                if interruptible {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+                } else {
+                    try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.duckOthers])
+                }
                 try AVAudioSession.sharedInstance().setActive(true)
 
                 let player = try AVAudioPlayer(data: audioData)
@@ -116,8 +126,9 @@ final class TextToSpeechService {
         return sentences.isEmpty ? [trimmed] : sentences
     }
 
-    /// Stop current playback.
+    /// Stop current playback. Sets wasInterrupted so speak() returns early.
     func stop() {
+        wasInterrupted = true
         audioPlayer?.stop()
         audioPlayer = nil
         playbackDelegate = nil

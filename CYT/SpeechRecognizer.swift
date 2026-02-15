@@ -32,6 +32,7 @@ final class SpeechRecognizer {
 
     private let recognizer: SFSpeechRecognizer?
     private let audioEngine = AVAudioEngine()
+    private let interruptEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private var transcriptContinuation: CheckedContinuation<String, Error>?
@@ -46,6 +47,18 @@ final class SpeechRecognizer {
     }
     private let silenceState = SilenceState()
     private static let silenceAmplitudeThreshold: Float = 0.01
+
+    private final class InterruptSpeechState: @unchecked Sendable {
+        let lock = NSLock()
+        var sampleCount = 0
+        var thresholdSamples = 0
+        var hasFired = false
+    }
+    private let interruptSpeechState = InterruptSpeechState()
+    private static let interruptSpeechAmplitudeThreshold: Float = 0.02
+    private static let interruptSpeechDurationSeconds: TimeInterval = 0.2
+    private var interruptCallback: (() async -> Void)?
+    private var isInterruptMonitoring = false
 
     init() {
         recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -222,6 +235,96 @@ final class SpeechRecognizer {
         }
         recognitionTask = nil
         tempAudioURL = nil
+    }
+
+    func startInterruptMonitoring(onSpeechDetected: @escaping () async -> Void) {
+        stopInterruptMonitoring()
+        interruptCallback = onSpeechDetected
+        isInterruptMonitoring = true
+        interruptSpeechState.lock.lock()
+        interruptSpeechState.sampleCount = 0
+        interruptSpeechState.hasFired = false
+        interruptSpeechState.lock.unlock()
+
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+            let inputNode = interruptEngine.inputNode
+            let format = inputNode.outputFormat(forBus: 0)
+            interruptSpeechState.lock.lock()
+            interruptSpeechState.thresholdSamples = Int(format.sampleRate * Self.interruptSpeechDurationSeconds)
+            interruptSpeechState.lock.unlock()
+
+            let bufferSize: AVAudioFrameCount = 4096
+            inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: format) { [weak self] buffer, _ in
+                Self.processInterruptSpeechDetection(
+                    buffer: buffer,
+                    sampleRate: format.sampleRate,
+                    state: self?.interruptSpeechState,
+                    onFired: { [weak self] in
+                        let callback = self?.interruptCallback
+                        Task { @MainActor in
+                            await callback?()
+                        }
+                    }
+                )
+            }
+
+            interruptEngine.prepare()
+            try interruptEngine.start()
+        } catch {
+            isInterruptMonitoring = false
+            interruptCallback = nil
+        }
+    }
+
+    func stopInterruptMonitoring() {
+        guard isInterruptMonitoring else { return }
+        isInterruptMonitoring = false
+        if interruptEngine.isRunning {
+            interruptEngine.inputNode.removeTap(onBus: 0)
+            interruptEngine.stop()
+        }
+        interruptCallback = nil
+    }
+
+    private static func processInterruptSpeechDetection(
+        buffer: AVAudioPCMBuffer,
+        sampleRate: Double,
+        state: InterruptSpeechState?,
+        onFired: @escaping () -> Void
+    ) {
+        guard let state else { return }
+        guard let channelData = buffer.floatChannelData else { return }
+        let frameLength = Int(buffer.frameLength)
+        let channelCount = Int(buffer.format.channelCount)
+        guard frameLength > 0, channelCount > 0 else { return }
+
+        var sumSq: Float = 0
+        for ch in 0..<channelCount {
+            let ptr = channelData[ch]
+            for i in 0..<frameLength {
+                let s = ptr[i]
+                sumSq += s * s
+            }
+        }
+        let rms = sqrt(sumSq / Float(frameLength * channelCount))
+
+        state.lock.lock()
+        if rms >= interruptSpeechAmplitudeThreshold {
+            state.sampleCount += frameLength * channelCount
+            if state.sampleCount >= state.thresholdSamples, !state.hasFired {
+                state.hasFired = true
+                state.lock.unlock()
+                onFired()
+                return
+            }
+        } else {
+            state.sampleCount = 0
+        }
+        state.lock.unlock()
     }
 
     private static func processSilenceDetection(

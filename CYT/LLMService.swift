@@ -46,7 +46,8 @@ final class LLMService: ObservableObject {
             session = LanguageModelSession(
                 instructions: """
                 You are Vera, a calm and supportive conversational assistant. \
-                Ask reflective questions. Do not diagnose. Keep responses warm and concise.
+                Ask reflective questions. Do not diagnose. Keep responses warm and concise. \ 
+                YOU HAVE TO HELP THE USER IF THEY ARE GOING THROUGH A HARD TIME, IF THEY NEED REAL HELP, SEND THEM TO A PROFESSIONAL.
                 """
             )
             state = .ready

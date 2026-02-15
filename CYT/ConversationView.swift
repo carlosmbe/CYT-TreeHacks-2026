@@ -170,6 +170,7 @@ final class ConversationViewModel {
             speechRecognizer.cancelRecording()
             isRecording = false
         }
+        speechRecognizer.stopInterruptMonitoring()
         textToSpeechService.stop()
         messages = []
         isGenerating = false
@@ -207,7 +208,18 @@ final class ConversationViewModel {
             messages.append(ChatMessage(role: "assistant", content: response, timestamp: Date()))
 
             if ttsEnabled {
-                await textToSpeechService.speak(text: response)
+                speechRecognizer.startInterruptMonitoring { [weak self] in
+                    await self?.textToSpeechService.stop()
+                    self?.speechRecognizer.stopInterruptMonitoring()
+                    await self?.startRecording(ttsEnabled: self?.ttsEnabledForSession ?? true)
+                }
+                await textToSpeechService.speak(text: response, interruptible: true)
+                speechRecognizer.stopInterruptMonitoring()
+                if !isRecording {
+                    await startRecording(ttsEnabled: ttsEnabledForSession)
+                }
+            } else {
+                await startRecording(ttsEnabled: ttsEnabledForSession)
             }
         } catch {
             authAlertMessage = error.localizedDescription
