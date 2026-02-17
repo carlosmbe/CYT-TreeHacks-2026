@@ -64,6 +64,7 @@ ConversationView (SwiftUI)
       ├─ HealthDataProvider     — HealthKit integration (HR, HRV, sleep, steps)
       └─ JournalStore           — JSON persistence for conversation journals
 ```
+<img width="1920" height="1080" alt="Slide2" src="https://github.com/user-attachments/assets/5d63c154-a072-42dd-a3cd-0141f97a989a" />
 
 ### Conversation Flow
 
@@ -85,5 +86,11 @@ ConversationView (SwiftUI)
 - PocketTTS (on-device text-to-speech)
 
 ## Beautiful Pictures
+<img width="1920" height="1080" alt="Slide4" src="https://github.com/user-attachments/assets/4b166016-5468-4422-9771-1d57369c1619" />
 
 ## Beautiful Video
+
+Make sure to unmute 
+
+https://github.com/user-attachments/assets/91bb3aa6-1241-4ef7-8c8d-c372960db38c
+
