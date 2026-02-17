@@ -26,10 +26,11 @@ This project uses large ML models that are **not included in the Git repo**. You
 
 Download the following zip files from Google Drive:
 
-| File | Size | Contents |
-|------|------|----------|
-| `CYT-Nemotron-Model.zip` | ~2.5 GB | NVIDIA Nemotron-Mini-4B-Instruct (quantized GGUF) — the main LLM that powers Vera |
-| `MiniLMEmbedder.mlpackage.zip` | ~40 MB | MiniLM sentence embedder for RAG search |
+| File | Size | Contents | Download |
+|------|------|----------| ---------- |
+| `CYT-Nemotron-Model.zip` | ~2.5 GB | NVIDIA Nemotron-Mini-4B-Instruct (quantized GGUF) — the main LLM that powers Vera | [Here](https://drive.google.com/file/d/1EXctUuIKNnKn1UccJYkbMao6zcc-kYPL/view?usp=share_link) |
+| `MiniLMEmbedder.mlpackage.zip` | ~40 MB | MiniLM sentence embedder for RAG search | [Here](https://drive.google.com/file/d/1II_hYj9HjFEVll4hn6dfsfVjvCU-_axL/view?usp=share_link) |
+| Optional `Emotion Recognition Wav2Vec2-IEMOCAP ` | ~180 MB |CoreML Port of `speechbrain/emotion-recognition-wav2vec2-IEMOCAP`| [Here](https://drive.google.com/file/d/1elYZgcwZJ4l6vBbMKI2VuBxPQzG-k-GZ/view?usp=share_link) |
 
 ### Step 2: Extract the Models into the Project
 
