@@ -14,3 +14,6 @@ FastVLMModel/FastVLM/model/model.safetensors
 
 # NVIDIA Nemotron GGUF model (~2.7 GB)
 *.gguf
+
+# Model zip files (distributed via Google Drive)
+*.zip
